@@ -1,2 +1,134 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+import { useState } from "react";
+import axios from "axios";
+
+export default function SocialMediaDashboard() {
+  const [brand, setBrand] = useState("");
+  const [competitor, setCompetitor] = useState("");
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [dateRange, setDateRange] = useState("today");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+  const [geoLocation, setGeoLocation] = useState("");
+  const [demographics, setDemographics] = useState("");
+  const [insights, setInsights] = useState("");
+  const [competitionData, setCompetitionData] = useState([]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`/fetch-data?brand=${encodeURIComponent(brand)}&competitor=${encodeURIComponent(competitor)}&dateRange=${dateRange}&startDate=${customStartDate}&endDate=${customEndDate}&geoLocation=${geoLocation}&demographics=${demographics}`);
+      setData(response.data.brandData);
+      setCompetitionData(response.data.competitionData);
+      generateInsights(response.data);
+    } catch (error) {
+      console.error("❌ Error fetching data:", error);
+      setError("Failed to fetch data. Please try again. 😞");
+    }
+    setLoading(false);
+  };
+
+  const generateInsights = async (data) => {
+    try {
+      const aiResponse = await axios.post("/generate-insights", { data });
+      setInsights(aiResponse.data.insights);
+    } catch (error) {
+      console.error("❌ Error generating insights:", error);
+      setInsights("Failed to generate insights. Please try again.");
+    }
+  };
+
+  return (
+    <div className="p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-md space-y-4">
+      <h1 className="text-xl font-bold">📊 Viralvyūha: Real-time Social Media Insights</h1>
+      <p>✅ <strong>Real-time Tracking:</strong> Monitor brand and competition trends.</p>
+      <p>✅ <strong>AI Insights:</strong> Get smart analysis on engagement.</p>
+      <p>✅ <strong>Comparative Analysis:</strong> Understand where you stand.</p>
+      <p>🚀 <strong>Next Steps:</strong> Deploy and refine.</p>
+
+      <input
+        type="text"
+        className="border p-2 rounded w-full"
+        placeholder="🔍 Enter brand name"
+        value={brand}
+        onChange={(e) => setBrand(e.target.value)}
+      />
+      <input
+        type="text"
+        className="border p-2 rounded w-full"
+        placeholder="🏆 Enter competitor brand"
+        value={competitor}
+        onChange={(e) => setCompetitor(e.target.value)}
+      />
+
+      <select
+        className="border p-2 rounded w-full"
+        value={dateRange}
+        onChange={(e) => setDateRange(e.target.value)}
+      >
+        <option value="today">📅 Today</option>
+        <option value="weekly">📆 Weekly</option>
+        <option value="monthly">🗓 Monthly</option>
+        <option value="half-yearly">🗂 Half Yearly</option>
+        <option value="yearly">📖 Yearly</option>
+        <option value="custom">⚙️ Custom</option>
+      </select>
+
+      {dateRange === "custom" && (
+        <div className="space-y-2">
+          <input
+            type="date"
+            className="border p-2 rounded w-full"
+            value={customStartDate}
+            onChange={(e) => setCustomStartDate(e.target.value)}
+          />
+          <input
+            type="date"
+            className="border p-2 rounded w-full"
+            value={customEndDate}
+            onChange={(e) => setCustomEndDate(e.target.value)}
+          />
+        </div>
+      )}
+
+      <input
+        type="text"
+        className="border p-2 rounded w-full"
+        placeholder="🌍 Enter Geo-Location"
+        value={geoLocation}
+        onChange={(e) => setGeoLocation(e.target.value)}
+      />
+      <input
+        type="text"
+        className="border p-2 rounded w-full"
+        placeholder="📊 Enter Demographics"
+        value={demographics}
+        onChange={(e) => setDemographics(e.target.value)}
+      />
+      
+      <button 
+        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        onClick={fetchData}
+        disabled={loading}
+      >
+        {loading ? "⏳ Fetching..." : "🔍 Get Insights"}
+      </button>
+      
+      {loading && <div className="flex justify-center mt-4"><div className="loader"></div></div>}
+      {error && <p className="text-red-500">{error}</p>}
+      {insights && <div className="bg-gray-100 p-4 rounded"><strong>🔍 AI Insights:</strong> {insights}</div>}
+      {competitionData.length > 0 && (
+        <div className="bg-gray-200 p-4 rounded mt-4">
+          <h2 className="font-bold">📊 Competitor Insights</h2>
+          <ul>
+            {competitionData.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
