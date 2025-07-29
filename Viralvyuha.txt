@@ -1,0 +1,159 @@
+import { useState } from "react";
+import axios from "axios";
+
+export default function SocialMediaDashboard() {
+  const [brand, setBrand] = useState("");
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [dateRange, setDateRange] = useState("today");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+  const [geoLocation, setGeoLocation] = useState("");
+  const [demographics, setDemographics] = useState("");
+  const [insights, setInsights] = useState("");
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`/fetch-data?brand=${encodeURIComponent(brand)}&dateRange=${dateRange}&startDate=${customStartDate}&endDate=${customEndDate}&geoLocation=${geoLocation}&demographics=${demographics}`);
+      setData(response.data);
+      generateInsights(response.data);
+    } catch (error) {
+      console.error("❌ Error fetching data:", error);
+      setError("Failed to fetch data. Please try again. 😞");
+    }
+    setLoading(false);
+  };
+
+  const generateInsights = async (data) => {
+    try {
+      const aiResponse = await axios.post("/generate-insights", { data });
+      setInsights(aiResponse.data.insights);
+    } catch (error) {
+      console.error("❌ Error generating insights:", error);
+      setInsights("Failed to generate insights. Please try again.");
+    }
+  };
+
+  return (
+    <div className="p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-md space-y-4">
+      <h1 className="text-xl font-bold">📊 Social Media Engagement Tracker</h1>
+      <p>✅ <strong>Frontend:</strong> UI is mostly functional.</p>
+      <p>✅ <strong>Backend API:</strong> Ensure <code>/fetch-data</code> is live and responding correctly.</p>
+      <p>✅ <strong>Data Flow:</strong> The API should return proper JSON data for the table.</p>
+      <p>🚀 <strong>Next Steps:</strong></p>
+      <ul>
+        <li>1️⃣ <strong>Deploy Locally:</strong> Run the frontend and confirm API calls work.</li>
+        <li>2️⃣ <strong>Check Backend:</strong> Test <code>/fetch-data</code> using Postman or a browser.</li>
+        <li>3️⃣ <strong>Bug Fixing:</strong> Handle any API errors and UI issues.</li>
+        <li>4️⃣ <strong>User Testing:</strong> Verify engagement data appears correctly.</li>
+      </ul>
+      <input
+        type="text"
+        className="border p-2 rounded w-full"
+        placeholder="🔍 Enter brand name (e.g., Nike, Tesla)"
+        value={brand}
+        onChange={(e) => setBrand(e.target.value)}
+      />
+      <select
+        className="border p-2 rounded w-full"
+        value={dateRange}
+        onChange={(e) => setDateRange(e.target.value)}
+      >
+        <option value="today">📅 Today</option>
+        <option value="weekly">📆 Weekly</option>
+        <option value="monthly">🗓 Monthly</option>
+        <option value="half-yearly">🗂 Half Yearly</option>
+        <option value="yearly">📖 Yearly</option>
+        <option value="custom">⚙️ Custom</option>
+      </select>
+      {dateRange === "custom" && (
+        <div className="space-y-2">
+          <input
+            type="date"
+            className="border p-2 rounded w-full"
+            value={customStartDate}
+            onChange={(e) => setCustomStartDate(e.target.value)}
+          />
+          <input
+            type="date"
+            className="border p-2 rounded w-full"
+            value={customEndDate}
+            onChange={(e) => setCustomEndDate(e.target.value)}
+          />
+        </div>
+      )}
+      <input
+        type="text"
+        className="border p-2 rounded w-full"
+        placeholder="🌍 Enter Geo-Location"
+        value={geoLocation}
+        onChange={(e) => setGeoLocation(e.target.value)}
+      />
+      <input
+        type="text"
+        className="border p-2 rounded w-full"
+        placeholder="📊 Enter Demographics (e.g., Age, Gender)"
+        value={demographics}
+        onChange={(e) => setDemographics(e.target.value)}
+      />
+      <button 
+        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        onClick={fetchData}
+        disabled={loading}
+      >
+        {loading ? "⏳ Fetching..." : "🔍 Get Engagement Data"}
+      </button>
+      {error && <p className="text-red-500">{error}</p>}
+      {insights && <div className="bg-gray-100 p-4 rounded"><strong>🔍 AI Insights:</strong> {insights}</div>}
+      <div>
+        {data.length > 0 ? (
+          <table className="w-full border-collapse border border-gray-300 mt-4">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border p-2">📌 Platform</th>
+                <th className="border p-2">📝 Content</th>
+                <th className="border p-2">👍 Likes/Score</th>
+                <th className="border p-2">💬 Comments/Retweets</th>
+                <th className="border p-2">📊 Sentiment</th>
+                <th className="border p-2">😊 Emotion</th>
+                <th className="border p-2">⚖️ Competitor Comparison</th>
+                <th className="border p-2">📈 Engagement Type</th>
+                <th className="border p-2">🚨 Sentiment Alert</th>
+                <th className="border p-2">📉 Predictive Analysis</th>
+                <th className="border p-2">🚦 Customer Journey</th>
+                <th className="border p-2">🌍 Geo-Location</th>
+                <th className="border p-2">📊 Demographics</th>
+                <th className="border p-2">🔗 Source Link</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((item, index) => (
+                <tr key={index} className="border">
+                  <td className="border p-2">{item.platform}</td>
+                  <td className="border p-2">{item.content}</td>
+                  <td className="border p-2">{item.likes}</td>
+                  <td className="border p-2">{item.comments}</td>
+                  <td className="border p-2">{item.sentiment}</td>
+                  <td className="border p-2">{item.emotion}</td>
+                  <td className="border p-2">{item.competitorComparison}</td>
+                  <td className="border p-2">{item.engagementType}</td>
+                  <td className="border p-2">{item.sentimentAlert}</td>
+                  <td className="border p-2">{item.predictiveAnalysis}</td>
+                  <td className="border p-2">{item.customerJourney}</td>
+                  <td className="border p-2">{item.geoLocation}</td>
+                  <td className="border p-2">{item.demographics}</td>
+                  <td className="border p-2"><a href={item.sourceLink} target="_blank" rel="noopener noreferrer">🔗 View Source</a></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="text-gray-500">No data available ❌</p>
+        )}
+      </div>
+    </div>
+  );
+}
